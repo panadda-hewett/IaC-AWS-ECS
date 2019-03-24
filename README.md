@@ -1,7 +1,7 @@
 # IaC-AWS-ECS
 Infrastructure as Code for creating AWS Elastic Container Service using Cloud Formation.
 
-This deployment contains CloudFormation templates, parameters file and AWS cli command to create this AWS ECS infrastructure. Some templates can be downloaded from available noted sources. I have separated them into multiple templates so they are reusable and can be resued when creating other services.
+This deployment contains CloudFormation templates, parameters file and AWS cli command to create a static website and AWS ECS infrastructure. Some templates can be downloaded from available noted sources. I have separated them into multiple templates so they are reusable when creating other services.
 
 These deployment steps can also be run through automatically using DevOps deployment tool such as Azure DevOps to create CloudFormation stack and retrieve outputs to be passed as parameters in next steps.
 
