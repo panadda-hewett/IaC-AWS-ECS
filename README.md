@@ -34,80 +34,80 @@ These deployment steps can also be run through automatically using DevOps deploy
  
 2. Deploy a static http front end service
 
-Option 1: Use S3 and CloudFront to host a static http as it gives benefits of speeding up the delivery of the static content depending on viewer’s location and no required instance management.
-Source: https://github.com/sjevs/cloudformation-s3-static-website-with-cloudfront-and-route-53
-    
-Create CloudFormation stack for template: route53-zone.yaml and s3-staticwebsite-with-cloudfront-and-route-53.yaml
+   Option 1: Use S3 and CloudFront to host a static http as it gives benefits of speeding up the delivery of the static content depending on viewer’s location and no required instance management.
+   Source: https://github.com/sjevs/cloudformation-s3-static-website-with-cloudfront-and-route-53
 
-   These templates will create:
-   1. Route53 – Hosted Zone
-   2. S3 – Allow Public as default
-   3. S3 – Backet Policy (Allow all traffic is default)
-   4. CloudFront
+   Create CloudFormation stack for template: route53-zone.yaml and s3-staticwebsite-with-cloudfront-and-route-53.yaml
 
-   Example: powershell and AWS cli
+      These templates will create:
+      1. Route53 – Hosted Zone
+      2. S3 – Allow Public as default
+      3. S3 – Backet Policy (Allow all traffic is default)
+      4. CloudFront
 
-   aws cloudformation create-stack --stack-name CreateRoute53 --template-body file://route53-zone.yaml --parameters ParameterKey=DomainName,ParameterValue=testmycode.com
+      Example: powershell and AWS cli
 
-   aws cloudformation create-stack --stack-name CreateS3CloudFront --template-body file://s3-staticwebsite-with-cloudfront-and-route-53.yaml --parameters ParameterKey=DomainName,ParameterValue=testmycode.com ParameterKey=FullDomainName,ParameterValue=www.testmycode.com
-   
-Then deploy contents to S3 using deployment pipeline.
+      aws cloudformation create-stack --stack-name CreateRoute53 --template-body file://route53-zone.yaml --parameters ParameterKey=DomainName,ParameterValue=testmycode.com
 
-Option2: Create an EC2 instance to host a http static content see step 3. Then setup hosting configuration (eg. IIS) on the instance and deploy content using deployment pipeline.
+      aws cloudformation create-stack --stack-name CreateS3CloudFront --template-body file://s3-staticwebsite-with-cloudfront-and-route-53.yaml --parameters ParameterKey=DomainName,ParameterValue=testmycode.com ParameterKey=FullDomainName,ParameterValue=www.testmycode.com
+
+   Then deploy contents to S3 using deployment pipeline.
+
+   Option2: Create an EC2 instance to host a http static content see step 3. Then setup hosting configuration (eg. IIS) on the instance and deploy content using deployment pipeline.
  
 3. Deploy ALB for Bastion Instance or an Instance to host a http static
 
-Sources: 
-* https://github.com/awsdocs/aws-cloudformation-userguide/blob/master/doc_source/aws-resource-elasticloadbalancingv2-targetgroup.md
-* https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-ec2.html
- 
-Option 1: Create ALB and EC2 instance separately, then add EC2 to the ALB target group.
+   Sources: 
+   * https://github.com/awsdocs/aws-cloudformation-userguide/blob/master/doc_source/aws-resource-elasticloadbalancingv2-targetgroup.md
+   * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-ec2.html
 
-   * Create CloudFormation stack for template: ALB_template.json
+   Option 1: Create ALB and EC2 instance separately, then add EC2 to the ALB target group.
+
+      * Create CloudFormation stack for template: ALB_template.json
+
+        This template will create:
+           1. VPC (if not specify parameter -> VpcId)
+           2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics as default. Can add  port 22 for bastion and set to allow traffic from specific IP Address range.
+           3. Application Load Balancer (ALB)
+           4. ALB Listener with default rule to forward to the target group
+           5. ALB Target group without targets
+           6. Output – ALB - DNSname
+      
+      * Deploy EC2 Instance 
+
+        Source: https://github.com/tongueroo/cloudformation-examples/blob/master/templates/singleinstance.yml
+
+        Create CloudFormation stack for template: single-instance.yml
+
+        This template requires an existing EC2 KeyPair and will create:
+          1. EC2 Instance
+          2. EC2 Instance security group – Can specify IP Address rage that allows to SSH (port 22) to the Instance
+          3. Output – Instance ID
+
+      * Add EC2 to the ALB target group
+
+        Example: powershell and AWS cli
+
+        To register instance to the target group: aws elbv2 register-targets --region ap-southeast-2 --target-group-arn $arntagetgroup -targets Id=$id
+
+        To deregister instance to the target group: aws elbv2 deregister-targets --region ap-southeast-2 --target-group-arn $arntagetgroup --targets Id=$id
+     
+   Option 2: Create ALB and EC2 instance with target group.
+
+     Create CloudFormation stack for template: ALB-EC2_template.json
 
      This template will create:
-        1. VPC (if not specify parameter -> VpcId)
-        2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics as default. Can add  port 22 for bastion and set to allow traffic from specific IP Address range.
-        3. Application Load Balancer (ALB)
-        4. ALB Listener with default rule to forward to the target group
-        5. ALB Target group without targets
-        6. Output – ALB - DNSname
-      
-   * Deploy EC2 Instance 
-   
-     Source: https://github.com/tongueroo/cloudformation-examples/blob/master/templates/singleinstance.yml
-
-     Create CloudFormation stack for template: single-instance.yml
-     
-     This template requires an existing EC2 KeyPair and will create:
-       1. EC2 Instance
-       2. EC2 Instance security group – Can specify IP Address rage that allows to SSH (port 22) to the Instance
-       3. Output – Instance ID
- 
-   * Add EC2 to the ALB target group
-
-     Example: powershell and AWS cli
-
-     To register instance to the target group: aws elbv2 register-targets --region ap-southeast-2 --target-group-arn $arntagetgroup -targets Id=$id
-
-     To deregister instance to the target group: aws elbv2 deregister-targets --region ap-southeast-2 --target-group-arn $arntagetgroup --targets Id=$id
-     
-Option 2: Create ALB and EC2 instance with target group.
-
-  Create CloudFormation stack for template: ALB-EC2_template.json
-
-  This template will create:
-  1. VPC (if not specify parameter -> VpcId)
-  2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics as default. Can add  port 22 for bastion and set to allow traffic from specific IP Address range.
-  3. Application Load Balancer (ALB)
-  4. ALB Listener with default rule to forward to the target group
-  5. ALB Target group with target to the instance
-  6. EC2 Instance using the same security group specified for ALB
-  7. Output – ALB - DNSname
+     1. VPC (if not specify parameter -> VpcId)
+     2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics as default. Can add  port 22 for bastion and set to allow traffic from specific IP Address range.
+     3. Application Load Balancer (ALB)
+     4. ALB Listener with default rule to forward to the target group
+     5. ALB Target group with target to the instance
+     6. EC2 Instance using the same security group specified for ALB
+     7. Output – ALB - DNSname
  
 4. Deploy ECS (Amazon Elastic Container Service) for api services & applications – Assume they are docker images 
 
-Reference: https://github.com/widdix/aws-cf-templates/tree/master/ecs
+   Reference: https://github.com/widdix/aws-cf-templates/tree/master/ecs
  
   * Create CloudFormation stack for template: ALB-ECS_template.json
   
@@ -130,10 +130,10 @@ Reference: https://github.com/widdix/aws-cf-templates/tree/master/ecs
   * Create CloudFormation stack for template: ECS_template.json 
   
   This template will create:  
-   1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
-   2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
-   3. AutoScaling LaunchConfiguration
-   4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
+      1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
+      2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
+      3. AutoScaling LaunchConfiguration
+      4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
  
    Example: powershell and AWS cli
 
@@ -141,7 +141,7 @@ Reference: https://github.com/widdix/aws-cf-templates/tree/master/ecs
  
 5. Deploy mySQL
 
-Source: https://github.com/awslabs/aws-cloudformationtemplates/blob/master/aws/services/RDS/RDS_MySQL_With_Read_Replica.yaml
+   Source: https://github.com/awslabs/aws-cloudformationtemplates/blob/master/aws/services/RDS/RDS_MySQL_With_Read_Replica.yaml
  
   * Create CloudFormation stack for template: RDS_MySQL_With_Read_Replica.yaml
   
@@ -153,7 +153,7 @@ Source: https://github.com/awslabs/aws-cloudformationtemplates/blob/master/aws/s
 
 6. Deploy Postgres
 
-Source: https://github.com/widdix/aws-cf-templates/blob/master/state/rds-postgres.yaml
+   Source: https://github.com/widdix/aws-cf-templates/blob/master/state/rds-postgres.yaml
  
   * Create CloudFormation stack for template: rds-postgres.yaml
 
