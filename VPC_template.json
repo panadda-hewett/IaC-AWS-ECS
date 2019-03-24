@@ -1,0 +1,394 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation template to create 2 new VPCs and peering.\n",
+  "Parameters": {
+        "VPC1Name": {
+            "Type": "String",
+            "Description": "Specifies the first VPC name",
+            "Default": "VPC1"
+        },
+        "Vpc1Cidr": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "10.0.0.0/16"
+        },
+        "VPC1Subnet1Name": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "VPC1 Subnet 1"
+        },
+		"Vpc1Subnet1Cidr": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "10.0.3.0/24"
+        },
+        "VPC1Subnet2Name": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "VPC1 Subnet 2"
+        },
+		"Vpc1Subnet2Cidr": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "10.0.2.0/24"
+        },
+		"VPC2Name": {
+            "Type": "String",
+            "Description": "Specifies the second VPC name",
+            "Default": "VPC2"
+        },
+        "Vpc2Cidr": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the second VPC",
+            "Default": "10.10.0.0/16"
+        },
+		"VPC2Subnet1Name": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "VPC2 Subnet 1"
+        },
+		"Vpc2Subnet1Cidr": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR Block of the first VPC",
+            "Default": "10.10.10.0/24"
+        },
+		"PeeringName": {
+            "Type": "String",
+            "Description": "Specifies the Route Table name of the second VPC",
+            "Default": "VP1PeeringVPC2"
+        }			
+  },
+  "Resources": {
+    "vpc1": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+                    "Ref": "Vpc1Cidr"
+                },
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+                    "Ref": "VPC1Name"
+                }
+          }
+        ]
+      }
+    },
+    "vpc2": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+                    "Ref": "Vpc2Cidr"
+                },
+        "InstanceTenancy": "default",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+                    "Ref": "VPC2Name"
+                }
+          }
+        ]
+      }
+    },
+    "vpc1subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": {
+                    "Ref": "Vpc1Subnet1Cidr"
+                },
+        "AvailabilityZone": "ap-southeast-2a",
+        "VpcId": {
+          "Ref": "vpc1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+                    "Ref": "VPC1Subnet1Name"
+                }
+          }
+        ]
+      }
+    },
+    "vpc1subnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": {
+                    "Ref": "Vpc1Subnet2Cidr"
+                },
+        "AvailabilityZone": "ap-southeast-2b",
+        "VpcId": {
+          "Ref": "vpc1"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+                    "Ref": "VPC1Subnet2Name"
+                }
+          }
+        ]
+      }
+    },
+    "vpc2subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": {
+                    "Ref": "Vpc2Subnet1Cidr"
+                },
+        "AvailabilityZone": "ap-southeast-2a",
+        "VpcId": {
+          "Ref": "vpc2"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+                    "Ref": "VPC2Subnet1Name"
+                }
+          }
+        ]
+      }
+    },
+    "igw2": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+      }
+    },
+    "igw3": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+      }
+    },
+    "dopt1": {
+      "Type": "AWS::EC2::DHCPOptions",
+      "Properties": {
+        "DomainName": "ap-southeast-2.compute.internal",
+        "DomainNameServers": [
+          "AmazonProvidedDNS"
+        ]
+      }
+    },
+    "peerc1": {
+      "Type": "AWS::EC2::VPCPeeringConnection",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "PeeringName"
+          }
+        ],
+        "VpcId": {
+          "Ref": "vpc1"
+        },
+        "PeerVpcId": {
+          "Ref": "vpc2"
+        }
+      }
+    },
+    "acl1": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc1"
+        }
+      }
+    },
+    "acl2": {
+      "Type": "AWS::EC2::NetworkAcl",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc2"
+        }
+      }
+    },
+    "rtb11": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc1"
+        }
+      }
+    },
+    "rtb22": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc2"
+        }
+      }
+    },
+    "acl3": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": "true",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl1"
+        }
+      }
+    },
+    "acl4": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl1"
+        }
+      }
+    },
+    "acl5": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Egress": "true",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl2"
+        }
+      }
+    },
+    "acl6": {
+      "Type": "AWS::EC2::NetworkAclEntry",
+      "Properties": {
+        "CidrBlock": "0.0.0.0/0",
+        "Protocol": "-1",
+        "RuleAction": "allow",
+        "RuleNumber": "100",
+        "NetworkAclId": {
+          "Ref": "acl2"
+        }
+      }
+    },
+    "subnetacl6": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl1"
+        },
+        "SubnetId": {
+          "Ref": "vpc1subnet1"
+        }
+      }
+    },
+    "subnetacl8": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl1"
+        },
+        "SubnetId": {
+          "Ref": "vpc1subnet2"
+        }
+      }
+    },
+    "subnetacl9": {
+      "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+      "Properties": {
+        "NetworkAclId": {
+          "Ref": "acl2"
+        },
+        "SubnetId": {
+          "Ref": "vpc2subnet1"
+        }
+      }
+    },
+    "gw2": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc2"
+        },
+        "InternetGatewayId": {
+          "Ref": "igw2"
+        }
+      }
+    },
+    "gw3": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc1"
+        },
+        "InternetGatewayId": {
+          "Ref": "igw3"
+        }
+      }
+    },
+    "subnetroute5": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "rtb22"
+        },
+        "SubnetId": {
+          "Ref": "vpc2subnet1"
+        }
+      }
+    },
+    "route4": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "rtb11"
+        },
+        "GatewayId": {
+          "Ref": "igw3"
+        }
+      },
+      "DependsOn": "gw3"
+    },
+    "route6": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "RouteTableId": {
+          "Ref": "rtb22"
+        },
+        "GatewayId": {
+          "Ref": "igw2"
+        }
+      },
+      "DependsOn": "gw2"
+    },
+    "dchpassoc2": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc1"
+        },
+        "DhcpOptionsId": {
+          "Ref": "dopt1"
+        }
+      }
+    },
+    "dchpassoc3": {
+      "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
+      "Properties": {
+        "VpcId": {
+          "Ref": "vpc2"
+        },
+        "DhcpOptionsId": {
+          "Ref": "dopt1"
+        }
+      }
+    }
+  },
+  "Description": ""
+}

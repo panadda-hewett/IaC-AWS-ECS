@@ -1,0 +1,217 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+	"Parameters": {
+		"VpcId": {
+            "Type": "String",
+            "Description": "Specifies the first VPC name",
+            "Default": ""
+        },
+		"SubnetCidr1": {
+            "Type": "String",
+            "Description": "Specifies the CIDR Block of Subnet 1",
+            "Default": ""
+        },
+		"SecurityGroupId": {
+            "Type": "String",
+            "Description": "Optional - Specifies the Security Group Id of an existing Security Group. Leave blank to have a new Security Group created\n",
+            "Default": ""
+        },
+        "TargetGroupName": {
+            "Type": "String",
+            "Description": "Specifies the first VPC name",
+            "Default": ""
+        },
+		"AMIid": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR/IP range for Security Ports - defaults to 0.0.0.0/0\n",
+            "Default": ""
+        },
+		"InstanceType": {
+            "Type": "String",
+            "Description": "Specifies the EC2 instance type",
+            "Default": "t2.medium"
+        },
+		"InstancePort": {
+            "Type": "String",
+            "Description": "Specifies the EC2 instance port",
+            "Default": "80"
+        }
+		"PublicSubnetAz1": {
+            "Type": "String",
+            "Description": "Specifies the Public Subnet Availability zone 1",
+            "Default": ""
+        },
+		"PublicSubnetAz2": {
+            "Type": "String",
+            "Description": "Specifies the Public Subnet Availability zone 2",
+            "Default": ""
+        },
+		"SecurityIngressFromPort": {
+            "Type": "Number",
+            "Description": "Optional - Specifies the Start of Security Group port to open on ALB instances - defaults to port 0\n",
+            "Default": "80"
+        },
+		"SecurityIngressToPort": {
+            "Type": "Number",
+            "Description": "Optional - Specifies the End of Security Group port to open on ALB instances - defaults to port 80\n",
+            "Default": "80"
+        },
+		"SecurityIngressCidrIp": {
+            "Type": "String",
+            "Description": "Optional - Specifies the CIDR/IP range for Security Ports - defaults to 0.0.0.0/0\n",
+            "Default": "0.0.0.0/0"
+        }
+	},
+	"Conditions": {
+		"CreateNewSecurityGroup": {
+            "Fn::Equals": [
+                {
+                    "Ref": "SecurityGroupId"
+                },
+                ""
+            ]
+        },
+		"CreateNewVpc": {
+            "Fn::Equals": [
+                {
+                    "Ref": "VpcId"
+                },
+                ""
+            ]
+        },
+        "CreateSubnet1": {
+            "Fn::And": [
+                {
+                    "Fn::Not": [
+                        {
+                            "Fn::Equals": [
+                                {
+                                    "Ref": "SubnetCidr1"
+                                },
+                                ""
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "Condition": "CreateNewVpc"
+                }
+            ]
+        },
+	},
+    "Resources": {
+		"ALBSecurityGroup": {
+            "Condition": "CreateNewSecurityGroup",
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "ALB Allowed Ports",
+                "VpcId": {
+                    "Fn::If": [
+                        "CreateSubnet1",
+                        {
+                            "Ref": "Vpc"
+                        },
+                        {
+                            "Ref": "VpcId"
+                        }
+                    ]
+                },
+                "SecurityGroupIngress": {
+                    "IpProtocol": "tcp",
+                    "FromPort": {
+                        "Ref": "SecurityIngressFromPort"
+                    },
+                    "ToPort": {
+                        "Ref": "SecurityIngressToPort"
+                    },
+                    "CidrIp": {
+                        "Ref": "SecurityIngressCidrIp"
+                    }
+                }
+            }
+        },
+		"ALBListener" : {
+		  "Type" : "AWS::ElasticLoadBalancingV2::Listener",
+		  "Properties" : {
+			"DefaultActions" : [{
+			  "Type" : "forward",
+			  "TargetGroupArn" : { "Ref" : "ALBTargetGroup" }
+			}],
+			"LoadBalancerArn" : { "Ref" : "ApplicationLoadBalancer" },
+			"Port" : "80",
+			"Protocol" : "HTTP"
+		  }
+		},
+		"ApplicationLoadBalancer" : {
+		  "Type" : "AWS::ElasticLoadBalancingV2::LoadBalancer",
+		  "Properties" : {
+			"Scheme" : "internet-facing",
+			"Subnets" : [ {"Ref" : "PublicSubnetAz1"}, {"Ref" : "PublicSubnetAz2"}],
+			"SecurityGroups" : [
+                    {
+                        "Fn::If": [
+                            "CreateNewSecurityGroup",
+                            {
+                                "Ref": "ALBSecurityGroup"
+                            },
+                            {
+                                "Ref": "SecurityGroupId"
+                            }
+                        ]
+                    }
+                ]
+		  }
+		},
+		"ALBTargetGroup" : {
+		  "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+		  "Properties" : {
+			"HealthCheckIntervalSeconds" : 60,
+			"UnhealthyThresholdCount" : 10,
+			"HealthCheckPath" : "/",
+			"Name" : {
+                    "Ref": "TargetGroupName"
+                },
+			"Port" : 80,
+			"Protocol" : "HTTP",
+			"VpcId" : { "Ref": "vpcId" }
+			"TargetGroupAttributes" : [
+			  {
+				"Key" : deregistration_delay.timeout_seconds,
+				"Value" : 60
+			  }
+			],
+			"Targets": [
+			  { "Id": {"Ref" : "Ec2Instance"}, "Port": {"Ref" : "Instance1Port"} }
+			]
+		  }
+		},
+		"Ec2Instance" : {
+		  "Type" : "AWS::EC2::Instance", 
+		  "Properties" : {
+			"ImageId" : { "Ref" : "AMIid" },
+			"InstanceType" : { "Ref" : "InstanceType" },
+			"SecurityGroups" : [{ "Ref" : "ALBSecurityGroup" }],
+			"BlockDeviceMappings" : [
+			  {
+				"DeviceName" : "/dev/sda1",
+				"Ebs" : { "VolumeSize" : "50" } 
+			  },{
+				"DeviceName" : "/dev/sdm",
+				"Ebs" : { "VolumeSize" : "100" }
+			  }
+			]
+		  }
+		}
+    },
+    "Outputs": {
+        "DNSName": {
+            "Value": {
+                "Fn::GetAtt": [
+                    "ApplicationLoadBalancer",
+                    "DNSName"
+                ]
+            },
+            "Description": "DNSName of ApplicationLoadBalancer"
+        }
+    }
+}
