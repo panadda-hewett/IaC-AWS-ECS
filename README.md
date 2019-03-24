@@ -109,7 +109,7 @@ These deployment steps can also be run through automatically using DevOps deploy
 
    Reference: https://github.com/widdix/aws-cf-templates/tree/master/ecs
  
-  * Create CloudFormation stack for template: ALB-ECS_template.json
+   * Create CloudFormation stack for template: ALB-ECS_template.json
   
     This template will create:
     1. VPC (if not specify parameter -> VpcId)
@@ -127,23 +127,23 @@ These deployment steps can also be run through automatically using DevOps deploy
       * Port  5000 for the Transactions service 
       * Output – ALB – DSNname
     
-  * Create CloudFormation stack for template: ECS_template.json 
+   * Create CloudFormation stack for template: ECS_template.json 
   
-  This template will create:
-  1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
-  2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
-  3. AutoScaling LaunchConfiguration
-  4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
- 
-   Example: powershell and AWS cli
+    This template will create:
+    1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
+    2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
+    3. AutoScaling LaunchConfiguration
+    4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
 
-   aws cloudformation create-stack --stack-name create2VPCs --template-body file:// ECS_template.json –parameters file:// ECS_parameters.json
+    Example: powershell and AWS cli
+
+    aws cloudformation create-stack --stack-name create2VPCs --template-body file:// ECS_template.json –parameters file:// ECS_parameters.json
  
 5. Deploy mySQL
 
    Source: https://github.com/awslabs/aws-cloudformationtemplates/blob/master/aws/services/RDS/RDS_MySQL_With_Read_Replica.yaml
  
-  * Create CloudFormation stack for template: RDS_MySQL_With_Read_Replica.yaml
+   Create CloudFormation stack for template: RDS_MySQL_With_Read_Replica.yaml
   
     This template will create:
     1. Security Group for database access allow port 3306
@@ -155,7 +155,7 @@ These deployment steps can also be run through automatically using DevOps deploy
 
    Source: https://github.com/widdix/aws-cf-templates/blob/master/state/rds-postgres.yaml
  
-  * Create CloudFormation stack for template: rds-postgres.yaml
+   Create CloudFormation stack for template: rds-postgres.yaml
 
     These templates will create: 
     1. Route53 – record set
