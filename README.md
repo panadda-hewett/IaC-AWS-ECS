@@ -129,11 +129,11 @@ These deployment steps can also be run through automatically using DevOps deploy
     
   * Create CloudFormation stack for template: ECS_template.json 
   
-  This template will create:  
-      1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
-      2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
-      3. AutoScaling LaunchConfiguration
-      4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
+  This template will create:
+  1. VPC and subnets (if not specify parameter -> VpcId), default Availability Zones are "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
+  2. Security Group for ALB (if not specify parameter ->  SecurityGroupId), default ingress port is 80 and egress opens to all. Allow all traffics to port 80 as default
+  3. AutoScaling LaunchConfiguration
+  4. EC2 Instance for containers (default parameter -> UserData to add Clustername to the ecs.config file)
  
    Example: powershell and AWS cli
 
@@ -149,7 +149,7 @@ These deployment steps can also be run through automatically using DevOps deploy
     1. Security Group for database access allow port 3306
     2. Database
     3. Replica DB
-  4. Output - EC2Platform, DB ConnectionString, Replica ConnectionString
+    4. Output - EC2Platform, DB ConnectionString, Replica ConnectionString
 
 6. Deploy Postgres
 
