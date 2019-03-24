@@ -7,7 +7,18 @@ These deployment steps can also be run through automatically using DevOps deploy
 
 # Deployment Steps:
 
-1. Deploy 2 VPCs a. Create CloudFormation stack for template: VPC_template.json This template will create:  2 VPC2   2 subnets for 2 availability zones for load balancing VPC1  1 subnet for VPC2  ACL network (Allow all traffic as default)  Route Tables   Internet Gateway  VPC peering (so these 2 VPCs can communicate to each other privately) Note: Be mindful of overlapping IP addresses in these 2 VPCs when select CidrBlock for VPC and subnet.
+1. Deploy 2 VPCs a. Create CloudFormation stack for template: VPC_template.json 
+
+   This template will create:
+   1. 2 VPCs
+   2. 2 subnets for 2 availability zones for load balancing VPC1
+   3. 1 subnet for VPC2
+   4. ACL network (Allow all traffic as default)
+   5. Route Tables
+   6. Internet Gateway
+   7. VPC peering (so these 2 VPCs can communicate to each other privately)
+
+   Note: Be mindful of overlapping IP addresses in these 2 VPCs when select CidrBlock for VPC and subnet.
 
    Example: powershell and AWS cli
 
